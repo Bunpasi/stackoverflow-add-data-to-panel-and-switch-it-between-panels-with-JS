@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		
+		<style>
+			.list_item{
+				cursor: pointer;
+				margin: 0;
+				padding: 10px;
+			}
+			
+			.list_item.selected{ /* Show the user which ones are selected. */
+				background-color: green;
+			}
+		</style>
+	</head>
+
+	<body>
+		<p>
+			<button id="name_button" type="button">Click me!</button>
+		</p> 
+		<button id="clear_button" type="button">Clear</button> 
+		<button id="move_right_button" type="button"> --> </button> 
+		<button id="move_left_button" type="button"><-- </button> 
+		<div id="box0" class="box0" style="background-color:red; height:200px; margin:20px auto;"></div>
+		<div id="box1" class="box1" style="background-color:grey; height:200px; margin:20px auto;"> </div>
+		
+		<script>
+			(function(){
+				/* Retrieve all input we need. */
+				var clearButton = document.getElementById('clear_button');
+				var moveLeftButton = document.getElementById('move_left_button');
+				var moveRightButton = document.getElementById('move_right_button');
+				var nameButton = document.getElementById('name_button');
+				
+				// We store the boxes in an array to use one function to give access to both boxes by only passing the ID.
+				// Thereby we store the data in a separate array because constantly accessing HTML DOM data can be messy.
+				var leftBoxIndex = 0;
+				var rightBoxIndex = 1;
+				var boxes = [];
+				boxes.push(document.getElementById('box0'));
+				boxes.push(document.getElementById('box1'));
+				
+				// We'll store the data 
+				var boxData = [[], []];
+				
+				function clearBox(id){
+					boxData[id] = [];
+					updateBox(id);
+				}
+				
+				function moveToPanel(fromId, toId){
+					// Retrieve the selected items only from the required box.
+					var selectedElements = boxes[fromId].querySelectorAll('.list_item.selected');
+					
+					// We only need to update the data, not the DOM.
+					for(var i = 0; i < selectedElements.length; i++){
+						var text = selectedElements[i].innerHTML;
+						boxData[fromId].splice(boxData[fromId].indexOf(text), 1); // Remove from one panel.
+						boxData[toId].push(text); // Insert into the other panel.
+					}
+					
+					updateBox(fromId);
+					updateBox(toId);
+				}
+				
+				function onClearButtonClicked(){
+					clearBox(leftBoxIndex);
+					clearBox(rightBoxIndex);
+				}
+				
+				function onNameButtonClicked(){
+					
+					// We retrieve the data.
+					var sentence = prompt('Please enter a name');
+					if( !sentence ) // If nothing is entered, we just don't do anything.
+						return;
+					
+					var arrSentence = sentence.split(' ');
+					
+					// We update the data.
+					boxData[leftBoxIndex] = boxData[leftBoxIndex].concat(arrSentence);
+					
+					// No that the data is updated, we update the DOM.
+					updateBox(leftBoxIndex);
+				}
+				
+				function onMoveLeftButtonClicked(){
+					moveToPanel(rightBoxIndex, leftBoxIndex);
+				}
+				
+				function onMoveRightButtonClicked(){
+					moveToPanel(leftBoxIndex, rightBoxIndex);
+				}
+				
+				function updateBox(id){
+					
+					// Sort the data.
+					boxData[leftBoxIndex].sort();
+					boxData[rightBoxIndex].sort();
+					
+					// First remove all DOM elements.
+					while(boxes[id].firstChild)
+						boxes[id].removeChild(boxes[id].firstChild);
+					
+					// Add all DOM elements.
+					for(var i = 0; i < boxData[id].length; i++){
+						var p = document.createElement('p');
+						p.className = 'list_item';
+						p.innerHTML = boxData[id][i];
+						p.addEventListener('click', function(event){
+							if( this.classList.contains('selected') )
+								this.classList.remove('selected');
+							else
+								this.classList.add('selected');
+						});
+						boxes[id].appendChild(p)
+					}
+				}
+				
+				/* Initialize the events. */
+				clearButton.addEventListener('click', onClearButtonClicked);
+				moveLeftButton.addEventListener('click', onMoveLeftButtonClicked);
+				moveRightButton.addEventListener('click', onMoveRightButtonClicked);
+				nameButton.addEventListener('click', onNameButtonClicked);
+			})();
+    </script>
+	</body>
+</html>
